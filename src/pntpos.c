@@ -85,8 +85,8 @@ static double prange(const obsd_t *obs, const nav_t *nav, const double *azel,
     int i=0,j=1,sys;
     
     *var=0.0;
-    
-    if (!(sys=satsys(obs->sat,NULL))||P1==0.0) return 0.0;
+
+    if (!(sys=satsys(obs->sat,NULL))||obs->P[0]==0.0) return 0.0;
     /* choose freq for iono-free calculation:
        L1-L2 for GPS/GLO/QZS/GAL E5b, L1-L5 for SBS, GAL E5a */
     if (NFREQ>=3&&(sys&(SYS_SBS))) j=2;  /* L5 for SBAS */
