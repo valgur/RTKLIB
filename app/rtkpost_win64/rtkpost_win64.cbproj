@@ -75,7 +75,7 @@
         <BCC_PCHUsage>None</BCC_PCHUsage>
         <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <DCC_Namespace>Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
-        <Icon_MainIcon>rtkpost_mkl_Icon.ico</Icon_MainIcon>
+        <Icon_MainIcon>rtkpost_win64_Icon.ico</Icon_MainIcon>
         <VerInfo_Locale>1041</VerInfo_Locale>
         <Manifest_File>None</Manifest_File>
         <TASM_IncludePath>..\rtkpost;..\appcmn;..\..\src;$(BDS)\include;$(BDS)\include\vcl;$(TASM_IncludePath)</TASM_IncludePath>

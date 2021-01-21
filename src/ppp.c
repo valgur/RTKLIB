@@ -518,7 +518,7 @@ static void detslp_mw(rtk_t *rtk, const obsd_t *obs, int n, const nav_t *nav)
 /* temporal update of position -----------------------------------------------*/
 static void udpos_ppp(rtk_t *rtk)
 {
-    double *F,*P,*FP,*x,*xp,pos[3],Q[9]={0},Qv[9];
+    double *F,*P,*FP,*x,*xp,pos[3],Q[9]={0},Qv[9],var=0.0;
     int i,j,*ix,nx;
     
     trace(3,"udpos_ppp:\n");
@@ -550,14 +550,22 @@ static void udpos_ppp(rtk_t *rtk)
         }
         return;
     }
+	/* check variance of estimated position */
+    for (i=0;i<3;i++) var+=rtk->P[i+i*rtk->nx];
+    var/=3.0;
+    
+    if (var>VAR_POS) {
+        /* reset position with large variance */
+        for (i=0;i<3;i++) initx(rtk,rtk->sol.rr[i],VAR_POS,i);
+        for (i=3;i<6;i++) initx(rtk,rtk->sol.rr[i],VAR_VEL,i);
+        for (i=6;i<9;i++) initx(rtk,1E-6,VAR_ACC,i);
+        trace(2,"reset rtk position due to large variance: var=%.3f\n",var);
+        return;
+    }
     /* generate valid state index */
     ix=imat(rtk->nx,1);
     for (i=nx=0;i<rtk->nx;i++) {
-        if (rtk->x[i]!=0.0&&rtk->P[i+i*rtk->nx]>0.0) ix[nx++]=i;
-    }
-    if (nx<9) {
-        free(ix);
-        return;
+        if  (i<9||(rtk->x[i]!=0.0&&rtk->P[i+i*rtk->nx]>0.0)) ix[nx++]=i;
     }
     /* state transition of position/velocity/acceleration */
     F=eye(nx); P=mat(nx,nx); FP=mat(nx,nx); x=mat(nx,1); xp=mat(nx,1);
@@ -565,9 +573,13 @@ static void udpos_ppp(rtk_t *rtk)
     for (i=0;i<6;i++) {
         F[i+(i+3)*nx]=rtk->tt;
     }
-    for (i=0;i<3;i++) {
-        F[i+(i+6)*nx]=SQR(rtk->tt)/2.0;
+    /* include accel terms if filter is converged */
+    if (var<rtk->opt.thresar[1]) {
+        for (i=0;i<3;i++) {
+            F[i+(i+6)*nx]=SQR(rtk->tt)/2.0;
+        }
     }
+    else trace(3,"pos var too high for accel term\n");
     for (i=0;i<nx;i++) {
         x[i]=rtk->x[ix[i]];
         for (j=0;j<nx;j++) {
