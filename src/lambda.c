@@ -97,18 +97,18 @@ static void reduction(int n, double *L, double *D, double *Z)
 static int search(int n, int m, const double *L, const double *D,
                   const double *zs, double *zn, double *s)
 {
-    int i,j,k,c,nn=0,imax=0;
-    double newdist,maxdist=1E99,y;
-    double *S=zeros(n,n),*dist=mat(n,1),*zb=mat(n,1),*z=mat(n,1),*step=mat(n,1);
-    
-    k=n-1; dist[k]=0.0;
-    zb[k]=zs[k];
-    z[k]=ROUND(zb[k]);
-    y=zb[k]-z[k];
-    step[k]=SGN(y);  /* step towards closest integer */
-    for (c=0;c<LOOPMAX;c++) {
-        newdist=dist[k]+y*y/D[k];  /* newdist=sum(((z(j)-zb(j))^2/d(j))) */
-        if (newdist<maxdist) {
+    int i, j, k, c, nn = 0, imax = 0;
+    double newdist, maxdist = 1E99, y;
+    double* S = rtklib_zeros(n, n), * dist = mat(n, 1), * zb = mat(n, 1), * z = mat(n, 1), * step = mat(n, 1);
+
+    k = n - 1; dist[k] = 0.0;
+    zb[k] = zs[k];
+    z[k] = ROUND(zb[k]);
+    y = zb[k] - z[k];
+    step[k] = SGN(y);  /* step towards closest integer */
+    for (c = 0; c < LOOPMAX; c++) {
+        newdist = dist[k] + y * y / D[k];  /* newdist=sum(((z(j)-zb(j))^2/d(j))) */
+        if (newdist < maxdist) {
             /* Case 1: move down */
             if (k!=0) {
                 dist[--k]=newdist;
@@ -181,11 +181,11 @@ extern int lambda(int n, int m, const double *a, const double *Q, double *F,
                   double *s)
 {
     int info;
-    double *L,*D,*Z,*z,*E;
-    
-    if (n<=0||m<=0) return -1;
-    L=zeros(n,n); D=mat(n,1); Z=eye(n); z=mat(n,1); E=mat(n,m);
-    
+    double* L, * D, * Z, * z, * E;
+
+    if (n <= 0 || m <= 0) return -1;
+    L = rtklib_zeros(n, n); D = mat(n, 1); Z = eye(n); z = mat(n, 1); E = mat(n, m);
+
     /* LD (lower diaganol) factorization (Q=L'*diag(D)*L) */
     if (!(info=LD(n,Q,L,D))) {
         
@@ -213,15 +213,15 @@ extern int lambda(int n, int m, const double *a, const double *Q, double *F,
 *-----------------------------------------------------------------------------*/
 extern int lambda_reduction(int n, const double *Q, double *Z)
 {
-    double *L,*D;
-    int i,j,info;
-    
-    if (n<=0) return -1;
-    
-    L=zeros(n,n); D=mat(n,1);
-    
-    for (i=0;i<n;i++) for (j=0;j<n;j++) {
-        Z[i+j*n]=i==j?1.0:0.0;
+    double* L, * D;
+    int i, j, info;
+
+    if (n <= 0) return -1;
+
+    L = rtklib_zeros(n, n); D = mat(n, 1);
+
+    for (i = 0; i < n; i++) for (j = 0; j < n; j++) {
+        Z[i + j * n] = i == j ? 1.0 : 0.0;
     }
     /* LD factorization */
     if ((info=LD(n,Q,L,D))) {
@@ -249,11 +249,11 @@ extern int lambda_search(int n, int m, const double *a, const double *Q,
 {
     double *L,*D;
     int info;
-    
-    if (n<=0||m<=0) return -1;
-    
-    L=zeros(n,n); D=mat(n,1);
-    
+
+    if (n <= 0 || m <= 0) return -1;
+
+    L = rtklib_zeros(n, n); D = mat(n, 1);
+
     /* LD factorization */
     if ((info=LD(n,Q,L,D))) {
         free(L); free(D);
@@ -264,4 +264,12 @@ extern int lambda_search(int n, int m, const double *a, const double *Q,
     
     free(L); free(D);
     return info;
+}
+
+/* add by yansudan
+    to use LD out lambda.cpp
+*/
+int LD_(int n, const double* Q, double* L, double* D)
+{
+    return LD(n, Q, L, D);
 }

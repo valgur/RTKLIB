@@ -45,8 +45,8 @@
 *           2017/06/13  1.16 support output/input of velocity solution
 *           2018/10/10  1.17 support reading solution status file
 *-----------------------------------------------------------------------------*/
-#include <ctype.h>
 #include "rtklib.h"
+#include <ctype.h>
 
 /* constants and macros ------------------------------------------------------*/
 
@@ -930,9 +930,9 @@ extern void initsolbuf(solbuf_t *solbuf, int cyclic, int nmax)
         solbuf->rb[i]=0.0;
     }
     if (cyclic) {
-        if (nmax<=2) nmax=2;
-        if (!(solbuf->data=malloc(sizeof(sol_t)*nmax))) {
-            trace(1,"initsolbuf: memory allocation error\n");
+        if (nmax <= 2) nmax = 2;
+        if (!(solbuf->data = (sol_t*)malloc(sizeof(sol_t) * nmax))) {
+            trace(1, "initsolbuf: memory allocation error\n");
             return;
         }
         solbuf->nmax=nmax;
@@ -974,15 +974,15 @@ static int cmpsolstat(const void *p1, const void *p2)
 /* sort solution data --------------------------------------------------------*/
 static int sort_solstat(solstatbuf_t *statbuf)
 {
-    solstat_t *statbuf_data;
-    
-    trace(4,"sort_solstat: n=%d\n",statbuf->n);
-    
-    if (statbuf->n<=0) return 0;
-    
-    if (!(statbuf_data=realloc(statbuf->data,sizeof(solstat_t)*statbuf->n))) {
-        trace(1,"sort_solstat: memory allocation error\n");
-        free(statbuf->data); statbuf->data=NULL; statbuf->n=statbuf->nmax=0;
+    solstat_t* statbuf_data;
+
+    trace(4, "sort_solstat: n=%d\n", statbuf->n);
+
+    if (statbuf->n <= 0) return 0;
+
+    if (!(statbuf_data = (solstat_t*)realloc(statbuf->data, sizeof(solstat_t) * statbuf->n))) {
+        trace(1, "sort_solstat: memory allocation error\n");
+        free(statbuf->data); statbuf->data = NULL; statbuf->n = statbuf->nmax = 0;
         return 0;
     }
     statbuf->data=statbuf_data;
@@ -1172,11 +1172,11 @@ static int outpos(unsigned char *buff, const char *s, const sol_t *sol,
     else {
         p+=sprintf(p,"%s%s%14.9f%s%14.9f",s,sep,pos[0]*R2D,sep,pos[1]*R2D);
     }
-    p+=sprintf(p,"%s%10.4f%s%3d%s%3d%s%8.4f%s%8.4f%s%8.4f%s%8.4f%s%8.4f%s%8.4f%s%6.2f%s%6.1f",
-               sep,pos[2],sep,sol->stat,sep,sol->ns,sep,SQRT(Q[4]),sep,
-               SQRT(Q[0]),sep,SQRT(Q[8]),sep,sqvar(Q[1]),sep,sqvar(Q[2]),
-               sep,sqvar(Q[5]),sep,sol->age,sep,sol->ratio);
-    
+    p += sprintf(p, "%s%10.4f%s%3d%s%3d%s%8.4f%s%8.4f%s%8.4f%s%8.4f%s%8.4f%s%8.4f%s%6.2f%s%6.1f%s%d",
+        sep, pos[2], sep, sol->stat, sep, sol->ns, sep, SQRT(Q[4]), sep,
+        SQRT(Q[0]), sep, SQRT(Q[8]), sep, sqvar(Q[1]), sep, sqvar(Q[2]),
+        sep, sqvar(Q[5]), sep, sol->age, sep, sol->ratio,sep,sol->fix);
+
     if (opt->outvel) { /* output velocity */
         soltocov_vel(sol,P);
         ecef2enu(pos,sol->rr+3,vel);
@@ -1567,16 +1567,16 @@ extern int outsolheads(unsigned char *buff, const solopt_t *opt)
     
     if (opt->posf==SOLF_LLH) { /* lat/lon/hgt */
         if (opt->degf) {
-            p+=sprintf(p,"%16s%s%16s%s%10s%s%3s%s%3s%s%8s%s%8s%s%8s%s%8s%s%8s%s%8s%s%6s%s%6s",
-                       "latitude(d'\")",sep,"longitude(d'\")",sep,"height(m)",sep,
-                       "Q",sep,"ns",sep,"sdn(m)",sep,"sde(m)",sep,"sdu(m)",sep,
-                       "sdne(m)",sep,"sdeu(m)",sep,"sdue(m)",sep,"age(s)",sep,"ratio");
+            p += sprintf(p, "%16s%s%16s%s%10s%s%3s%s%3s%s%8s%s%8s%s%8s%s%8s%s%8s%s%8s%s%6s%s%6s%s%3s",
+                "latitude(d'\")", sep, "longitude(d'\")", sep, "height(m)", sep,
+                "Q", sep, "ns", sep, "sdn(m)", sep, "sde(m)", sep, "sdu(m)", sep,
+                "sdne(m)", sep, "sdeu(m)", sep, "sdue(m)", sep, "age(s)", sep, "ratio",sep,"fix");
         }
         else {
-            p+=sprintf(p,"%14s%s%14s%s%10s%s%3s%s%3s%s%8s%s%8s%s%8s%s%8s%s%8s%s%8s%s%6s%s%6s",
-                       "latitude(deg)",sep,"longitude(deg)",sep,"height(m)",sep,
-                       "Q",sep,"ns",sep,"sdn(m)",sep,"sde(m)",sep,"sdu(m)",sep,
-                       "sdne(m)",sep,"sdeu(m)",sep,"sdun(m)",sep,"age(s)",sep,"ratio");
+            p += sprintf(p, "%14s%s%14s%s%10s%s%3s%s%3s%s%8s%s%8s%s%8s%s%8s%s%8s%s%8s%s%6s%s%6s%s%3s",
+                "latitude(deg)", sep, "longitude(deg)", sep, "height(m)", sep,
+                "Q", sep, "ns", sep, "sdn(m)", sep, "sde(m)", sep, "sdu(m)", sep,
+                "sdne(m)", sep, "sdeu(m)", sep, "sdun(m)", sep, "age(s)", sep, "ratio",sep,"fix");
         }
         if (opt->outvel) {
             p+=sprintf(p,"%s%10s%s%10s%s%10s%s%9s%s%8s%s%8s%s%8s%s%8s%s%8s",
@@ -1584,23 +1584,23 @@ extern int outsolheads(unsigned char *buff, const solopt_t *opt)
                        "sdve",sep,"sdvu",sep,"sdvne",sep,"sdveu",sep,"sdvun");
         }
     }
-    else if (opt->posf==SOLF_XYZ) { /* x/y/z-ecef */
-        p+=sprintf(p,"%14s%s%14s%s%14s%s%3s%s%3s%s%8s%s%8s%s%8s%s%8s%s%8s%s%8s%s%6s%s%6s",
-                   "x-ecef(m)",sep,"y-ecef(m)",sep,"z-ecef(m)",sep,"Q",sep,"ns",sep,
-                   "sdx(m)",sep,"sdy(m)",sep,"sdz(m)",sep,"sdxy(m)",sep,
-                   "sdyz(m)",sep,"sdzx(m)",sep,"age(s)",sep,"ratio");
-        
+    else if (opt->posf == SOLF_XYZ) { /* x/y/z-ecef */
+        p += sprintf(p, "%14s%s%14s%s%14s%s%3s%s%3s%s%8s%s%8s%s%8s%s%8s%s%8s%s%8s%s%6s%s%6s%s%3s",
+            "x-ecef(m)", sep, "y-ecef(m)", sep, "z-ecef(m)", sep, "Q", sep, "ns", sep,
+            "sdx(m)", sep, "sdy(m)", sep, "sdz(m)", sep, "sdxy(m)", sep,
+            "sdyz(m)", sep, "sdzx(m)", sep, "age(s)", sep, "ratio",sep,"fix");
+
         if (opt->outvel) {
             p+=sprintf(p,"%s%10s%s%10s%s%10s%s%9s%s%8s%s%8s%s%8s%s%8s%s%8s",
                        sep,"vx(m/s)",sep,"vy(m/s)",sep,"vz(m/s)",sep,"sdvx",sep,
                        "sdvy",sep,"sdvz",sep,"sdvxy",sep,"sdvyz",sep,"sdvzx");
         }
     }
-    else if (opt->posf==SOLF_ENU) { /* e/n/u-baseline */
-        p+=sprintf(p,"%14s%s%14s%s%14s%s%3s%s%3s%s%8s%s%8s%s%8s%s%8s%s%8s%s%8s%s%6s%s%6s",
-                   "e-baseline(m)",sep,"n-baseline(m)",sep,"u-baseline(m)",sep,
-                   "Q",sep,"ns",sep,"sde(m)",sep,"sdn(m)",sep,"sdu(m)",sep,
-                   "sden(m)",sep,"sdnu(m)",sep,"sdue(m)",sep,"age(s)",sep,"ratio");
+    else if (opt->posf == SOLF_ENU) { /* e/n/u-baseline */
+        p += sprintf(p, "%14s%s%14s%s%14s%s%3s%s%3s%s%8s%s%8s%s%8s%s%8s%s%8s%s%8s%s%6s%s%6s%s%3s",
+            "e-baseline(m)", sep, "n-baseline(m)", sep, "u-baseline(m)", sep,
+            "Q", sep, "ns", sep, "sde(m)", sep, "sdn(m)", sep, "sdu(m)", sep,
+            "sden(m)", sep, "sdnu(m)", sep, "sdue(m)", sep, "age(s)", sep, "ratio",sep,"fix");
         if (opt->outvel) {
             p+=sprintf(p,"%s%10s%s%10s%s%10s%s%9s%s%8s%s%8s%s%8s%s%8s%s%8s",
                        sep,"ve(m/s)",sep,"vn(m/s)",sep,"vu(m/s)",sep,"sdve",sep,
@@ -1658,8 +1658,10 @@ extern int outsols(unsigned char *buff, const sol_t *sol, const double *rb,
     
     if (opt->timef) time2str(time,s,timeu);
     else {
-        gpst=time2gpst(time,&week);
-        if (86400*7-gpst<0.5/pow(10.0,timeu)) {
+        //double gpstd;
+        //gpstd = get_daytime(time);
+        gpst = time2gpst(time, &week);
+        if (86400 * 7 - gpst < 0.5 / pow(10.0, timeu)) {
             week++;
             gpst=0.0;
         }

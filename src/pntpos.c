@@ -327,10 +327,10 @@ static int valsol(const double *azel, const int *vsat, int n,
     return 1;
 }
 /* estimate receiver position ------------------------------------------------*/
-static int estpos(const obsd_t *obs, int n, const double *rs, const double *dts,
-                  const double *vare, const int *svh, const nav_t *nav,
-                  const prcopt_t *opt, const ssat_t *ssat, sol_t *sol, double *azel,
-                  int *vsat, double *resp, char *msg)
+extern int estpos(const obsd_t* obs, int n, const double* rs, const double* dts,
+    const double* vare, const int* svh, const nav_t* nav,
+    const prcopt_t* opt, const ssat_t* ssat, sol_t* sol, double* azel,
+    int* vsat, double* resp, char* msg)
 {
     double x[NX]={0},dx[NX],Q[NX*NX],*v,*H,*var,sig;
     int i,j,k,info,stat,nv,ns;
@@ -395,25 +395,25 @@ static int estpos(const obsd_t *obs, int n, const double *rs, const double *dts,
     return 0;
 }
 /* raim fde (failure detection and exclution) -------------------------------*/
-static int raim_fde(const obsd_t *obs, int n, const double *rs,
-                    const double *dts, const double *vare, const int *svh,
-                    const nav_t *nav, const prcopt_t *opt, const ssat_t *ssat, 
-                    sol_t *sol, double *azel, int *vsat, double *resp, char *msg)
+extern int raim_fde(const obsd_t* obs, int n, const double* rs,
+    const double* dts, const double* vare, const int* svh,
+    const nav_t* nav, const prcopt_t* opt, const ssat_t* ssat,
+    sol_t* sol, double* azel, int* vsat, double* resp, char* msg)
 {
-    obsd_t *obs_e;
-    sol_t sol_e={{0}};
-    char tstr[32],name[16],msg_e[128];
-    double *rs_e,*dts_e,*vare_e,*azel_e,*resp_e,rms_e,rms=100.0;
-    int i,j,k,nvsat,stat=0,*svh_e,*vsat_e,sat=0;
-    
-    trace(3,"raim_fde: %s n=%2d\n",time_str(obs[0].time,0),n);
-    
-    if (!(obs_e=(obsd_t *)malloc(sizeof(obsd_t)*n))) return 0;
-    rs_e = mat(6,n); dts_e = mat(2,n); vare_e=mat(1,n); azel_e=zeros(2,n);
-    svh_e=imat(1,n); vsat_e=imat(1,n); resp_e=mat(1,n); 
-    
-    for (i=0;i<n;i++) {
-        
+    obsd_t* obs_e;
+    sol_t sol_e = { {0} };
+    char tstr[32], name[16], msg_e[128];
+    double* rs_e, * dts_e, * vare_e, * azel_e, * resp_e, rms_e, rms = 100.0;
+    int i, j, k, nvsat, stat = 0, * svh_e, * vsat_e, sat = 0;
+
+    trace(3, "raim_fde: %s n=%2d\n", time_str(obs[0].time, 0), n);
+
+    if (!(obs_e = (obsd_t*)malloc(sizeof(obsd_t) * n))) return 0;
+    rs_e = mat(6, n); dts_e = mat(2, n); vare_e = mat(1, n); azel_e = rtklib_zeros(2, n);
+    svh_e = imat(1, n); vsat_e = imat(1, n); resp_e = mat(1, n);
+
+    for (i = 0; i < n; i++) {
+
         /* satellite exclution */
         for (j=k=0;j<n;j++) {
             if (j==i) continue;
@@ -562,21 +562,19 @@ extern int pntpos(const obsd_t *obs, int n, const nav_t *nav,
                   const prcopt_t *opt, sol_t *sol, double *azel, ssat_t *ssat,
                   char *msg)
 {
-    prcopt_t opt_=*opt;
-    double *rs,*dts,*var,*azel_,*resp;
-    int i,stat,vsat[MAXOBS]={0},svh[MAXOBS];
-    
-    sol->stat=SOLQ_NONE;
-    
-    if (n<=0) {strcpy(msg,"no observation data"); return 0;}
-    
-    trace(3,"pntpos  : tobs=%s n=%d\n",time_str(obs[0].time,3),n);
-    
-    sol->time=obs[0].time; msg[0]='\0';
-    sol->eventime = obs[0].eventime;
-    
-    rs=mat(6,n); dts=mat(2,n); var=mat(1,n); azel_=zeros(2,n); resp=mat(1,n);
-    
+    prcopt_t opt_ = *opt;
+    double* rs, * dts, * var, * azel_, * resp;
+    int i, stat, vsat[MAXOBS] = { 0 }, svh[MAXOBS];
+
+    sol->stat = SOLQ_NONE;
+
+    if (n <= 0) { strcpy(msg, "no observation data"); return 0; }
+
+    trace(3, "pntpos  : tobs=%s n=%d\n", time_str(obs[0].time, 3), n);
+    sol->time = obs[0].time; msg[0] = '\0';
+    //sol->eventime = obs[0].eventime;
+    rs = mat(6, n); dts = mat(2, n); var = mat(1, n); azel_ = rtklib_zeros(2, n); resp = mat(1, n);
+
     if (ssat) {
         for (i=0;i<MAXSAT;i++) {
             ssat[i].snr_rover[0]=0;

@@ -507,11 +507,11 @@ static void detslp_mw(rtk_t *rtk, const obsd_t *obs, int n, const nav_t *nav)
 /* temporal update of position -----------------------------------------------*/
 static void udpos_ppp(rtk_t *rtk)
 {
-    double *F,*P,*FP,*x,*xp,pos[3],Q[9]={0},Qv[9];
-    int i,j,*ix,nx;
-    
-    trace(3,"udpos_ppp:\n");
-    
+    double* F, * P, * FP, * x, * xp, pos[3], Q[9] = { 0 }, Qv[9];
+    int i, j, * ix, nx;
+    //FILE *fp = fopen("D:\\udpos.txt", "a+");
+    trace(3, "udpos_ppp:\n");
+
     /* fixed mode */
     if (rtk->opt.mode==PMODE_PPP_FIXED) {
         for (i=0;i<3;i++) initx(rtk,rtk->opt.ru[i],1E-8,i);
@@ -564,14 +564,17 @@ static void udpos_ppp(rtk_t *rtk)
         }
     }
     /* x=F*x, P=F*P*F+Q */
-    matmul("NN",nx,1,nx,1.0,F,x,0.0,xp);
-    matmul("NN",nx,nx,nx,1.0,F,P,0.0,FP);
-    matmul("NT",nx,nx,nx,1.0,FP,F,0.0,P);
-    
-    for (i=0;i<nx;i++) {
-        rtk->x[ix[i]]=xp[i];
-        for (j=0;j<nx;j++) {
-            rtk->P[ix[i]+ix[j]*rtk->nx]=P[i+j*nx];
+    matmul("NN", nx, 1, nx, 1.0, F, x, 0.0, xp);
+    matmul("NN", nx, nx, nx, 1.0, F, P, 0.0, FP);
+    matmul("NT", nx, nx, nx, 1.0, FP, F, 0.0, P);
+
+    for (i = 0; i < nx; i++) {
+        rtk->x[ix[i]] = xp[i];
+        for (j = 0; j < nx; j++) {
+            rtk->P[ix[i] + ix[j] * rtk->nx] = P[i + j * nx];
+            if (i == j) {
+                //fprintf(fp, "%f ", P[i + j*nx]);
+            }
         }
     }
     /* process noise added to only acceleration */
@@ -582,6 +585,8 @@ static void udpos_ppp(rtk_t *rtk)
     for (i=0;i<3;i++) for (j=0;j<3;j++) {
         rtk->P[i+6+(j+6)*rtk->nx]+=Qv[i+j*3];
     }
+    //fprintf(fp,"\n");
+    //fclose(fp);
     free(ix); free(F); free(P); free(FP); free(x); free(xp);
 }
 /* temporal update of clock --------------------------------------------------*/
@@ -1176,96 +1181,18 @@ static int test_hold_amb(rtk_t *rtk)
     /* test # of continuous fixed */
     return ++rtk->nfix>=rtk->opt.minfix;
 }
-/* precise point positioning -------------------------------------------------*/
-extern void pppos(rtk_t *rtk, const obsd_t *obs, int n, const nav_t *nav)
+
+/*********add by yan*****************************************************/
+void detslp_mw_(rtk_t* rtk, const obsd_t* obs, int n, const nav_t* nav)
 {
-    const prcopt_t *opt=&rtk->opt;
-    double *rs,*dts,*var,*v,*H,*R,*azel,*xp,*Pp,dr[3]={0},std[3];
-    char str[32];
-    int i,j,nv,info,svh[MAXOBS],exc[MAXOBS]={0},stat=SOLQ_SINGLE;
-    
-    time2str(obs[0].time,str,2);
-    trace(3,"pppos   : time=%s nx=%d n=%d\n",str,rtk->nx,n);
-    
-    rs=mat(6,n); dts=mat(2,n); var=mat(1,n); azel=zeros(2,n);
-    
-    for (i=0;i<MAXOBS;i++) for (j=0;j<opt->nf;j++) {
-        rtk->ssat[i].fix[j]=0;
-        rtk->ssat[obs[i].sat-1].snr_rover[j]=obs[i].SNR[j];
-        rtk->ssat[obs[i].sat-1].snr_base[j] =0;
-    }
-        
-    /* temporal update of ekf states */
-    udstate_ppp(rtk,obs,n,nav);
-    
-    /* satellite positions and clocks */
-    satposs(obs[0].time,obs,n,nav,rtk->opt.sateph,rs,dts,var,svh);
-    
-    /* exclude measurements of eclipsing satellite (block IIA) */
-    if (rtk->opt.posopt[3]) {
-        testeclipse(obs,n,nav,rs);
-    }
-    /* earth tides correction */
-    if (opt->tidecorr) {
-        tidedisp(gpst2utc(obs[0].time),rtk->x,opt->tidecorr==1?1:7,&nav->erp,
-                 opt->odisp[0],dr);
-    }
-    nv=n*rtk->opt.nf*2+MAXSAT+3;
-    xp=mat(rtk->nx,1); Pp=zeros(rtk->nx,rtk->nx);
-    v=mat(nv,1); H=mat(rtk->nx,nv); R=mat(nv,nv);
-    
-    for (i=0;i<MAX_ITER;i++) {
-        
-        matcpy(xp,rtk->x,rtk->nx,1);
-        matcpy(Pp,rtk->P,rtk->nx,rtk->nx);
-        
-        /* prefit residuals */
-        if (!(nv=ppp_res(0,obs,n,rs,dts,var,svh,dr,exc,nav,xp,rtk,v,H,R,azel))) {
-            trace(2,"%s ppp (%d) no valid obs data\n",str,i+1);
-            break;
-        }
-        /* measurement update of ekf states */
-        if ((info=filter(xp,Pp,H,v,R,rtk->nx,nv))) {
-            trace(2,"%s ppp (%d) filter error info=%d\n",str,i+1,info);
-            break;
-        }
-        /* postfit residuals */
-        if (ppp_res(i+1,obs,n,rs,dts,var,svh,dr,exc,nav,xp,rtk,v,H,R,azel)) {
-            matcpy(rtk->x,xp,rtk->nx,1);
-            matcpy(rtk->P,Pp,rtk->nx,rtk->nx);
-            stat=SOLQ_PPP;
-            break;
-        }
-    }
-    if (i>=MAX_ITER) {
-        trace(2,"%s ppp (%d) iteration overflows\n",str,i);
-    }
-    if (stat==SOLQ_PPP) {
-        
-        /* ambiguity resolution in ppp */
-        if (ppp_ar(rtk,obs,n,exc,nav,azel,xp,Pp)&&
-            ppp_res(9,obs,n,rs,dts,var,svh,dr,exc,nav,xp,rtk,v,H,R,azel)) {
-            
-            matcpy(rtk->xa,xp,rtk->nx,1);
-            matcpy(rtk->Pa,Pp,rtk->nx,rtk->nx);
-            
-            for (i=0;i<3;i++) std[i]=sqrt(Pp[i+i*rtk->nx]);
-            if (norm(std,3)<MAX_STD_FIX) stat=SOLQ_FIX;
-        }
-        else {
-            rtk->nfix=0;
-        }
-        /* update solution status */
-        update_stat(rtk,obs,n,stat);
-        
-        /* hold fixed ambiguities */
-        if (stat==SOLQ_FIX&&test_hold_amb(rtk)) {
-            matcpy(rtk->x,xp,rtk->nx,1);
-            matcpy(rtk->P,Pp,rtk->nx,rtk->nx);
-            trace(2,"%s hold ambiguity\n",str);
-            rtk->nfix=0;
-        }
-    }
-    free(rs); free(dts); free(var); free(azel);
-    free(xp); free(Pp); free(v); free(H); free(R);
+    detslp_mw(rtk, obs, n, nav);
 }
+
+void detslp_gf_(rtk_t* rtk, const obsd_t* obs, int n, const nav_t* nav)
+{
+    detslp_gf(rtk, obs, n, nav);
+}
+
+//extern vector<fr_check*> fr_c;
+
+

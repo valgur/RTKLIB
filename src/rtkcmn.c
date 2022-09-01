@@ -216,7 +216,29 @@ const solopt_t solopt_default={ /* defaults solution output options */
     {0.0,0.0},                  /* nmeaintv */
     " ",""                      /* separator/program name */
 };
-const char *formatstrs[32]={    /* stream format strings */
+const prcopt_t ppp_default = { /* defaults ppp options */
+    PMODE_PPP_STATIC,0,2,SYS_GPS,   /* mode,soltype,nf,navsys */
+    15.0 * D2R,{{0,0}},           /* elmin,snrmask */
+    0,1,1,1,1,1,                /* sateph,modear,glomodear,gpsmodear,bdsmodear,arfilter */
+    20,0,4,5,10,20,             /* maxout,minlock,minfixsats,minholdsats,mindropsats,minfix */
+    0,1,1,1,1,0,                /* rcvstds,armaxiter,estion,esttrop,dynamics,tidecorr */
+    1,0,0,0,0,                  /* niter,codesmooth,intpref,sbascorr,sbassatsel */
+    0,0,                        /* rovpos,refpos */
+    WEIGHTOPT_ELEVATION,        /* weightmode */
+    {300.0,300.0,300.0},        /* eratio[] */
+    {100.0,0.003,0.003,0.0,1.0,52.0}, /* err[] */
+    {30.0,0.03,0.3},            /* std[] */
+    {1E-4,1E-3,1E-4,1E-1,1E-2,0.0}, /* prn[] */
+    5E-12,                      /* sclkstab */
+    {3.0,0.25,0.0,1E-9,1E-5,0.0,0.0,0.0}, /* thresar */
+    0.0,0.0,0.05,0.1,0.01,      /* elmaskar,elmaskhold,thresslip,varholdamb,gainholdamb */
+    30.0,5.0,30.0,              /* maxtdif,maxinno,maxgdop */
+    {0},{0},{0},                /* baseline,ru,rb */
+    {"",""},                    /* anttype */
+    {{0}},{{0}},{0},            /* antdel,pcv,exsats */
+    1,1                         /* maxaveep,initrst */
+};
+const char* formatstrs[32] = {    /* stream format strings */
     "RTCM 2",                   /*  0 */
     "RTCM 3",                   /*  1 */
     "NovAtel OEM6",             /*  2 */
@@ -831,7 +853,7 @@ extern int *imat(int n, int m)
 * args   : int    n,m       I   number of rows and columns of matrix
 * return : matrix pointer (if n<=0 or m<=0, return NULL)
 *-----------------------------------------------------------------------------*/
-extern double *zeros(int n, int m)
+extern double* rtklib_zeros(int n, int m)
 {
     double *p;
     
@@ -854,8 +876,8 @@ extern double *eye(int n)
 {
     double *p;
     int i;
-    
-    if ((p=zeros(n,n))) for (i=0;i<n;i++) p[i+i*n]=1.0;
+
+    if ((p = rtklib_zeros(n, n))) for (i = 0; i < n; i++) p[i + i * n] = 1.0;
     return p;
 }
 /* inner product ---------------------------------------------------------------
@@ -1168,6 +1190,15 @@ extern int filter(double *x, double *P, const double *H, const double *v,
         x[ix[i]]=xp_[i];
         for (j=0;j<k;j++) P[ix[i]+ix[j]*n]=Pp_[i+j*k];
     }
+    /*double *P_diag;
+    P_diag = mat(k, 1);
+    for (i = 0; i < k; i++)
+    {
+        P_diag[i]= Pp_[i + i * k];
+    }
+
+    free(P_diag);*/
+
     free(ix); free(x_); free(xp_); free(P_); free(Pp_); free(H_);
     return info;
 }

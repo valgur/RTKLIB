@@ -1018,28 +1018,30 @@ static int readrnxobs(FILE *fp, gtime_t ts, gtime_t te, double tint,
     if (!(data=(obsd_t *)malloc(sizeof(obsd_t)*MAXOBS))) return 0;
     
     /* read rinex obs data body */
-    while ((n=readrnxobsb(fp,opt,ver,tsys,tobs,&flag,data,sta))>=0&&stat>=0) {
-
+    while ((n = readrnxobsb(fp, opt, ver, tsys, tobs, &flag, data, sta)) >= 0 && stat >= 0) {
+        /*
         if (flag == 5) {
             eventime = data[0].eventime;
             n = readrnxobsb(fp,opt,ver,tsys,tobs,&flag,data,sta);
             if (fabs(timediff(data[0].time,time1)-dtime1)>=DTTOL)
                 n = readrnxobsb(fp,opt,ver,tsys,tobs,&flag,data,sta);
         }
-        
-        if (eventime.time==0 || obs->n-n1<=0 || timediff(eventime,time1)>=0) {
-           for (i=0;i<n;i++) data[i].eventime = eventime;
-        }  else {
-           /* add event to previous epoch if delayed */
-            for (i=0;i<n1;i++) obs->data[obs->n-i-1].eventime = eventime;
-            for (i=0;i<n;i++) data[i].eventime=time0;
-        }
+        */
+        /*
+        if (eventime.time == 0 || obs->n - n1 <= 0 || timediff(eventime, time1) >= 0) {
+            for (i = 0; i < n; i++) data[i].eventime = eventime;
+        }*/
+        //else {
+            /* add event to previous epoch if delayed */
+            //for (i = 0; i < n1; i++) obs->data[obs->n - i - 1].eventime = eventime;
+            //for (i = 0; i < n; i++) data[i].eventime = time0;
+        //}
         /* set to zero eventime for the next iteration */
-        eventime.time = 0;
-        eventime.sec = 0;
-        
-        for (i=0;i<n;i++) {
-            
+        //eventime.time = 0;
+        //eventime.sec = 0;
+
+        for (i = 0; i < n; i++) {
+
             /* utc -> gpst */
             if (*tsys==TSYS_UTC) data[i].time=utc2gpst(data[i].time);
             
@@ -2201,17 +2203,17 @@ extern int outrnxobsb(FILE *fp, const rnxopt_t *opt, const obsd_t *obs, int n,
             }
         }
 
-        /* set trace level to 1 generate CSV file of raw observations   */
-        if (gettracelevel()==1) {
-            trace(1,",%16.2f,%3d,%13.2f,%13.2f,%9.2f,%2.0f,%1d,%1d,%13.2f,%13.2f,%9.2f,%2.0f,%1d,%1d\n",
+        /*
+        if (gettracelevel() == 1) {
+            trace(1, ",%16.2f,%3d,%13.2f,%13.2f,%9.2f,%2.0f,%1d,%1d,%13.2f,%13.2f,%9.2f,%2.0f,%1d,%1d\n",
                 obs[0].time.time + obs[0].time.sec, obs[ind[i]].sat,
                 obs[ind[i]].P[0], obs[ind[i]].L[0], obs[ind[i]].D[0],
                 obs[ind[i]].SNR[0]*0.25, obs[ind[i]].LLI[0], obs[ind[i]].qualL[0],
                 obs[ind[i]].P[1], obs[ind[i]].L[1], obs[ind[i]].D[1],
                 obs[ind[i]].SNR[1]*0.25, obs[ind[i]].LLI[1], obs[ind[i]].qualL[1]);
         }
-
-        if (opt->rnxver>2.99&&fprintf(fp,"\n")==EOF) return 0;
+        */
+        if (opt->rnxver > 2.99 && fprintf(fp, "\n") == EOF) return 0;
     }
 
     if (flag == 5 && epdiff < 0) {
