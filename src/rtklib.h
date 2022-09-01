@@ -1266,20 +1266,22 @@ typedef struct {        /* ambiguity control type */
         int initial_mode;   /* initial positioning mode */
         double daytime;
 
-        int nn, nu, nr;    /* nn=nu+nr nr基站卫星数，nu流动站卫星数*/
-        int ns;/*共视卫星数*/
-        int nv;//双差观测值个数
-        int vflg[MAXOBS * NFREQ * 2 + 1];//双差观测值对应的基站卫星、流动站卫星、观测值类型、频率:(sat[i] << 16) | (sat[j] << 8) | ((code ? 1 : 0) << 4) | (frq);
+        int nn, nu, nr; /* nn=nu+nr nr base station satellite number, nu rover satellite number */
+        int ns; /* Number of satellites in common view*/
+        int nv; // Number of double difference observations
+        int vflg[MAXOBS * NFREQ * 2 + 1]; // Base station satellite, rover satellite, observation type,
+                                          // frequency corresponding to double-difference observations:
+                                          // (sat[i] << 16) | (sat[j] << 8) | ((code ? 1 : 0) << 4) | (frq);
         int sat[MAXSAT];
         int ir[MAXSAT], iu[MAXSAT];
-        double dt;//基站流动站时间差
+        double dt; // The time difference of the base station rover
 
-        double* xa_;     /* fixed states and their covariance *///, *Pa_
-        double* P_dd_ambiguity=NULL;/*sigle diff ambiguity covariance*/
-        double* dd_bias=NULL;//双差整周模糊度
+        double *xa_; /* fixed states and their covariance */ //, *Pa_
+        double *P_dd_ambiguity = NULL; /* single diff ambiguity covariance*/
+        double *dd_bias = NULL;        // Double difference integer ambiguity
 
-        double* P_dd_ambiguity_f = NULL;/*sigle diff ambiguity covariance*/
-        double* dd_bias_f = NULL;//双差整周模糊度
+        double *P_dd_ambiguity_f = NULL; /* single diff ambiguity covariance*/
+        double *dd_bias_f = NULL;        // Double difference integer ambiguity
     } rtk_t;
 
     typedef struct rtk_check {
@@ -1302,41 +1304,41 @@ typedef struct {        /* ambiguity control type */
     };
     typedef struct sat_prn_ferq
     {
-        int sat_prn_of_x;//prn
-        int ferq;//频率
+        int sat_prn_of_x; //prn
+        int ferq; //frequency
     };
     typedef struct fr_check {
         //int basesta;
         //int pre_basesta;
         //double Temp_f;
-        //unsigned long    TimeCount;        //工作时间计数
+        //unsigned long    TimeCount;        // working time count
 
-        //时间
-        gtime_t time;       /* time (GPST) */
-        gtime_t eventime;   /* time of event (GPST) */
-        double dt;//基站vs流动站时间间隔，大于一定值需要做插值计算，或不能使用
-        int epoch_num;//第几个历元
+        // time
+        gtime_t time; /* time (GPST) */
+        gtime_t eventime; /* time of event (GPST) */
+        double dt;//Base station vs rover time interval, if it is greater than a certain value, interpolation calculation is required, or it cannot be used
+        int epoch_num;//Number of epochs
 
 
-        double xf[9 + MAXSAT * 2];//[流动站位置 3，单差模糊度]
+        double xf[9 + MAXSAT * 2];//[rover position 3, single difference ambiguity]
         double Pf[3*3];//
         double vv[3];
-        double P_bias[MAXSAT * 2];//单差的方差
-        //double    xr[9 + MAXSAT * 2];
-        double rb[6];       /* base position/velocity (ecef) (m|m/s) 基站位置*/
+        double P_bias[MAXSAT * 2];//Variance of single difference
+        //double xr[9 + MAXSAT * 2];
+        double rb[6]; /* base position/velocity (ecef) (m|m/s) base station position*/
 
         //int f_stat, r_stat;
         //int f_kfstat, r_kfstat;
 
-        int sat[MAXSAT];//卫星prn
+        int sat[MAXSAT];//Satellite prn
         ssat_t ssat[MAXSAT]; /* satellite status */
 
-        int nn, nu, nr,nv; /* nn=nu+nr nr基站卫星数，nu流动站卫星数*/
-        int sat_ns;//共视卫星数
-        int num_sat_pair;//双差模糊度数量
-        int vflg[MAXOBS * NFREQ * 2 + 1];//双差观测值对应的基站卫星、流动站卫星、观测值类型(载波0，伪距1)、频率(sat[i] << 16) | (sat[j] << 8) | ((code ? 1 : 0) << 4) | (frq)
+        int nn, nu, nr,nv; /* nn=nu+nr nr base station satellite number, nu rover satellite number*/
+        int sat_ns;//Number of satellites in common view
+        int num_sat_pair;//Number of double difference ambiguities
+        int vflg[MAXOBS * NFREQ * 2 + 1];//Base station satellite, rover satellite, observation value type (carrier 0, pseudorange 1), frequency (sat[i] << 16) corresponding to double difference observations | (sat[j] << 8) | ((code ? 1 : 0) << 4) | (frq)
         int bias_index[MAXOBS * NFREQ * 2 + 1];//Double difference ambiguity index of vector double_diff_pair and double_diff_pair_times
-        int stat;//SOLQ_NONE-0没有计算出结果，SOLQ_FIX-1固定解、SOLQ_FLOAT-2浮点解
+        int stat;//SOLQ_NONE-0 does not calculate the result, SOLQ_FIX-1 fixed solution, SOLQ_FLOAT-2 floating point solution
         /*
         sat1 = (vflg[i] >> 16) & 0xFF;
         sat2 = (vflg[i] >> 8) & 0xFF;
@@ -1344,17 +1346,17 @@ typedef struct {        /* ambiguity control type */
         freq = vflg[i] & 0xF;
         */
 
-        //double *rs, *dts, *var;//rs:6*n,卫星位置速度；dts 2*n {bias,drift} (s|s/s);var:sat position and clock error variances (m^2)
+        //double *rs, *dts, *var;//rs:6*n,satellite position and speed;dts 2*n {bias,drift} (s|s/s);var:sat position and clock error variances ( m^2)
         //int *svh;//sat health flag (-1:correction not available)
 
 
         /*int cycle_slip_flag;
         int cycle_slip[MAXSAT];*/
 
-        int iu[MAXSAT], ir[MAXSAT];//卫星在obs里面的索引
+        int iu[MAXSAT], ir[MAXSAT];//The index of the satellite in obs
         obsd_t obs[MAXOBS * 2]; /* for rover and base */
 
-        double dd_bias[MAXOBS * NFREQ * 2 + 1];//双差整周模糊度,暂存，记得删
+        double dd_bias[MAXOBS * NFREQ * 2 + 1];//Double difference integer ambiguity, temporary storage, remember to delete
     }fr_check;
 
     typedef struct ambi_infor
@@ -1370,7 +1372,7 @@ typedef struct {        /* ambiguity control type */
         gtime_t t_start;
         gtime_t t_end;
         double q;
-        int num;//持续的历元
+        int num; // epoch count
     };
 
     typedef struct half_cyc_tag {  /* half-cycle correction list type */
@@ -1965,14 +1967,14 @@ extern void settime(gtime_t time);
     int ddres_(fr_check* frc,const prcopt_t* opt, const nav_t *nav, double *y,
         double *e, double *azel, double *v, double *H, double *R, int *vflg,
         int *ref_sat_index,double *RR);
-    //第一个可用的卫星单差和其他相减
+    // Subtract the first available satellite single difference and the others
     int test_lamda(const prcopt_t* popt, vector<ambi_infor*> sd_ambi_, double *Q_sd);
-    //尝试用参考星和非参考星相减
+     // try to subtract the reference star and the non-reference star
     int test_lamda_dd(const prcopt_t* popt, vector<ambi_infor*> sd_ambi_, double *Q_dd);
 
     int LD_(int n, const double* Q, double* L, double* D);
 
-    //周跳修复
+    // cycle slip detection
     void detslp_mw_(rtk_t* rtk, const obsd_t* obs, int n, const nav_t* nav);
     void detslp_gf_(rtk_t* rtk, const obsd_t* obs, int n, const nav_t* nav);
 

@@ -57,14 +57,14 @@ public:
 };
 namespace gtsam
 {
-//extern BOOL	m_bWorking;				//仿真程序运行标志
+//extern BOOL	m_bWorking;				// Simulation program running flag
 //extern vector<rtk_check*> check_f;
 extern vector<fr_check*> fr_c;
-extern vector<int> bias_flg;//双差模糊度组合信息（vflg）：基站卫星、流动站卫星、频率
+extern vector<int> bias_flg;// Double difference ambiguity combination information (vflg): base station satellite, rover satellite, frequency
 extern set<int> dd_pair_set;
 //extern set<int> sat_used;
 extern int pre_ambi_size;
-extern vector<ambi_infor*> d_ambi;//双差模糊度的值、时间、在卡尔曼滤波里计算的系统噪声
+extern vector<ambi_infor*> d_ambi;//The value of double difference ambiguity, time, system noise calculated in Kalman filter
 
 
 extern vector<int> key_pos;
@@ -79,11 +79,11 @@ extern vector<clock_t> runtime_Q1;
 extern vector<clock_t> runtime_Q2;
 extern vector<clock_t> runtime_Q3;
 extern int key_ambi_global;
-extern int slidwin_size;//一次图优化单差向量持续的时长
+extern int slidwin_size;//The duration of one-time graph optimization single-difference vector
 
 
 
-//没用到的量
+// unused amount
 extern vector<double> cycle_slip_t;
 extern vector <biaskey*> b_key;
 extern vector <sat_pair*> sat_pairs;
